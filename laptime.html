@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SZEnergy Lap Timer</title>
+  <style>
+    :root {
+      --bg: #f4f4f5;
+      --bg-2: #e4e4e7;
+      --fg: #27272a;
+      --fg-2: #3f3f46;
+      --accent: #FFC815;
+      --accent-fg: #7f1d1d;
+      --danger: #ef4444;
+      --danger-fg: #7f1d1d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      padding: 0;
+      margin: 0;
+      font-family: monospace;
+      /*background: radial-gradient(circle at top, var(--accent), var(--bg));*/
+      background-color: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+    }
+
+    body>main {
+      max-width: 60rem;
+      margin: 0 auto;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    main>header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    main>header>h1 {
+      margin: 0;
+      padding: 0;
+      font-size: 2rem;
+    }
+
+    main>header>h1>span {
+      text-shadow: 0 0 2rem var(--accent);
+    }
+
+    main>header>p {
+      margin: 0;
+      color: var(--fg-2);
+    }
+
+    main>section {
+      background: var(--bg-2);
+      border-radius: 1rem;
+      padding: 1rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .stats {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .stat {
+      display: grid;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 1rem;
+      background: var(--bg);
+      flex: 1;
+    }
+
+    .stat strong {
+      font-size: 1.5rem;
+      letter-spacing: 0.1rem;
+      font-weight: 600;
+    }
+
+    .current-lap {
+      background: none;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: none !important;
+    }
+
+    .current-lap strong {
+      font-size: 4rem;
+    }
+
+    button {
+      border: none;
+      border-radius: 1rem;
+      padding: 1rem 1.5rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #start-btn {
+      background: var(--accent);
+      color: var(--accent-fg);
+    }
+
+    #lap-btn {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    #stop-btn {
+      background: var(--danger);
+      color: var(--danger-fg);
+    }
+
+    .laps {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .laps>div {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .laps>div>button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      text-wrap: nowrap;
+      flex: 0;
+    }
+
+    .laps>ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .laps .lap-item {
+      display: grid;
+      grid-template-columns: 4rem repeat(3, 1fr);
+      place-items: center left;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 1rem;
+      background: var(--bg);
+      font-size: 1rem;
+    }
+
+    .lap-item .lap-number {
+      font-weight: 600;
+    }
+
+    .lap-item .input-group input {
+      font-size: 1rem !important;
+    }
+
+    .diff-positive {
+      color: var(--danger);
+    }
+
+    .diff-negative {
+      color: var(--accent);
+    }
+
+    .input-group {
+      display: flex;
+    }
+
+    .input-group>input {
+      padding: 0.5rem 1rem;
+      font-size: 1.2rem;
+      width: 100%;
+      background-color: white;
+      border: 0.1rem solid var(--bg-2);
+      border-radius: 0.5rem 0 0 0.5rem;
+    }
+
+    .input-group>span {
+      display: flex;
+      align-items: center;
+      padding: 0 0.75rem;
+      background-color: white;
+      border: 0.1rem solid var(--bg-2);
+      border-left: none;
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    h2 {
+      margin: 0;
+      padding: 0;
+    }
+
+    #no-laps {
+      display: flex;
+      margin: 1rem auto;
+      color: var(--fg-2);
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <header>
+      <h1>
+        <span>SZEnergy</span>
+        Lap Timer
+      </h1>
+      <p>Made by varma02@github</p>
+    </header>
+
+    <section>
+      <div class="stat current-lap">
+        <strong id="current-lap">00:00.000</strong>
+      </div>
+      <div class="stat">
+        <span>Total Time</span>
+        <strong id="total-time">00:00.000</strong>
+      </div>
+      <div class="stat">
+        <span>Total Diff</span>
+        <strong id="total-diff">00:00.000</strong>
+      </div>
+      <div class="stat">
+        <span>Average Lap</span>
+        <strong id="avg-time">00:00.000</strong>
+      </div>
+      <div class="stat">
+        <span>Optimal Lap</span>
+        <div class="input-group">
+          <input id="optimal-lap" type="number" min="0" step="0.001" value="107" />
+          <span>sec</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <button id="start-btn">Start</button>
+      <button id="lap-btn" disabled>Lap</button>
+      <button id="stop-btn">Stop</button>
+    </section>
+
+    <section class="laps">
+      <div>
+        <h2>Previous laps</h2>
+        <button id="download-csv">Download CSV</button>
+      </div>
+      <ul id="lap-list">
+        <li id="no-laps">No laps yet.</li>
+        <li id="lap-template" class="lap-item" style="display: none;">
+          <span class="lap-number">#1</span>
+          <span class="lap-time">00:00.000</span>
+          <span class="lap-diff">+0.000</span>
+          <div class="input-group">
+            <input type="number" min="0" step="1" />
+            <span>Joules</span>
+          </div>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    const currentLapTime = document.getElementById('current-lap');
+    const totalDiff = document.getElementById('total-diff');
+    const totalTime = document.getElementById('total-time');
+    const avgTime = document.getElementById('avg-time');
+    const optimalLap = document.getElementById('optimal-lap');
+
+    const lapList = document.getElementById('lap-list');
+    const noLaps = document.getElementById('no-laps');
+    const lapTemplate = document.getElementById('lap-template');
+
+    const startBtn = document.getElementById('start-btn');
+    const lapBtn = document.getElementById('lap-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const downloadCSVBtn = document.getElementById('download-csv');
+
+    let laps = [];
+    let intervalId = null;
+    let optimalLapMs = 0;
+
+    function start() {
+      optimalLapMs = parseFloat(optimalLap.value) * 1000;
+      optimalLap.disabled = true;
+      startBtn.disabled = true;
+      lapBtn.disabled = false;
+      laps.push({startTime: Date.now(), endTime: null, energy: null});
+      intervalId = setInterval(updateStats, 45);
+    }
+    startBtn.onclick = start;
+
+    function lap() {
+      laps[laps.length - 1].endTime = Date.now();
+      laps.push({startTime: Date.now(), endTime: null, energy: null});
+      updateLaps();
+      noLaps.style.display = 'none';
+    }
+    lapBtn.onclick = lap;
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (!lapBtn.disabled) {
+          lap();
+          lapList.firstChild.querySelector('input').focus();
+        } else if (!startBtn.disabled) {
+          start();
+        }
+      } else if (e.code === 'Enter') {
+        document.activeElement.blur();
+      }
+    });
+
+    function stop() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      updateStats();
+      laps[laps.length - 1].endTime = Date.now();
+      updateLaps();
+      lapBtn.disabled = true;
+      stopBtn.disabled = true;
+      noLaps.style.display = 'none';
+    }
+    stopBtn.onclick = stop;
+
+    function updateStats() {
+      totalTime.textContent = formatTime(Date.now() - laps[0].startTime);
+      currentLapTime.textContent = formatTime(Date.now() - laps[laps.length - 1].startTime);
+    }
+
+    function updateLaps() {
+      for (let i = laps.length - 1; i >= 0; i -= 1) {
+        if (!laps[i].endTime) continue;
+        const thisLap = document.querySelector(`#lap-${i}`);
+        if (!thisLap) {
+          const newLap = lapTemplate.cloneNode(true);
+          newLap.id = `lap-${i}`;
+          newLap.style.display = '';
+          newLap.querySelector('.lap-number').textContent = `#${i + 1}`;
+          newLap.querySelector('.lap-time').textContent = formatTime(laps[i].endTime - laps[i].startTime);
+          const diff = laps[i].endTime - laps[i].startTime - optimalLapMs;
+          const diffElem = newLap.querySelector('.lap-diff');
+          diffElem.textContent = (diff >= 0 ? '+' : '-') + formatTime(Math.abs(diff));
+          if (diff >= 500) {
+            diffElem.classList.add('diff-positive');
+          } else if (diff <= -500) {
+            diffElem.classList.add('diff-negative');
+          }
+          newLap.querySelector('input').onchange = (e) => {
+            laps[i].energy = parseInt(e.target.value);
+          }
+          lapList.insertBefore(newLap, lapList.firstChild);
+        }
+      }
+      avgTime.textContent = formatTime(laps.filter(lap => lap.endTime).reduce((sum, lap) => sum + lap.endTime - lap.startTime, 0) / laps.filter(lap => lap.endTime).length);
+      const diff = laps.filter(lap => lap.endTime).reduce((sum, lap) => sum + (lap.endTime - lap.startTime - optimalLapMs), 0);
+      totalDiff.textContent = (diff >= 0 ? '+' : '-') + formatTime(diff);
+    }
+
+    const formatTime = (ms) => {
+      const totalMs = Math.max(0, Math.abs(Math.floor(ms)));
+      const minutes = Math.floor(totalMs / 60000);
+      const seconds = Math.floor((totalMs % 60000) / 1000);
+      const millis = totalMs % 1000;
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(millis).padStart(3, '0')}`;
+    };
+
+    function downloadCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Lap Number,Lap Time,Diff,Energy,Lap Start Timestamp, Lap End Timestamp\n";
+      laps.forEach((lap, index) => {
+        if (lap.endTime) {
+          const lapTime = formatTime(lap.endTime - lap.startTime);
+          const diff = lapTime - optimalLapMs;
+          csvContent += `${index + 1},${lapTime},${(diff >= 0 ? '+' : '-') + formatTime(diff)},${lap.energy || 'N/A'},${lap.startTime},${lap.endTime}\n`;
+        }
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `laps_${(new Date()).toISOString().replace("T", "_").replaceAll(":", "-").slice(0, 19)}.csv`);
+      // document.body.appendChild(link);
+      link.click();
+      // document.body.removeChild(link);
+    }
+    downloadCSVBtn.onclick = downloadCSV;
+  </script>
+</body>
+
+</html>
