@@ -405,7 +405,7 @@
         if (lap.endTime) {
           const lapTime = lap.endTime - lap.startTime;
           const diff = lapTime - optimalLapMs;
-          csvContent += `${index + 1},${formatTime(lapTime)},${(diff >= 0 ? '+' : '-') + formatTime(diff)},${lap.energy || '0'}J,${lap.startTime},${lap.endTime}\n`;
+          csvContent += `${index + 1},${formatTime(lapTime).replace('s', '')},${(diff >= 0 ? '+' : '-') + formatTime(diff).replace('s', '')},${lap.energy || '0'}\n`;
         }
       });
       const encodedUri = encodeURI(csvContent);
