@@ -392,10 +392,12 @@
             newLap.querySelector("input").onchange = (e) => {
               laps[i].energy = parseInt(e.target.value);
               avgJoule.textContent = (
-                (laps
-                  .filter((lap) => lap.energy)
-                  .reduce((sum, lap) => sum + lap.energy, 0) /
-                  laps.filter((lap) => lap.energy).length || 0) + "J"
+                Math.round(
+                  laps
+                    .filter((lap) => lap.energy)
+                    .reduce((sum, lap) => sum + lap.energy, 0) /
+                    laps.filter((lap) => lap.energy).length || 0,
+                ) + "J"
               ).padStart(5, "0");
             };
             lapList.insertBefore(newLap, lapList.firstChild);
