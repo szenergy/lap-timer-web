@@ -327,6 +327,7 @@
       startBtn.onclick = start;
 
       function lap() {
+        if (Date.now() - laps[laps.length - 1].startTime < 5000) return;
         laps[laps.length - 1].endTime = Date.now();
         laps.push({ startTime: Date.now(), endTime: null, energy: null });
         updateLaps();
