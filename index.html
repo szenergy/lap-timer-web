@@ -124,9 +124,9 @@
         cursor: not-allowed;
       }
 
-      #start-btn {
-        background: var(--accent);
-        color: var(--accent-fg);
+      .start-btn {
+        background: var(--accent) !important;
+        color: var(--accent-fg) !important;
       }
 
       #lap-btn {
@@ -226,6 +226,62 @@
         margin: 1rem auto;
         color: var(--fg-2);
       }
+
+      .top-two-stats {
+        display: flex;
+        width: 100%;
+        gap: 1rem;
+      }
+
+      .settings-container,
+      .settings-section,
+      .settings-toggle {
+        display: none;
+      }
+
+      @media (max-width: 700px) {
+        body > main {
+          padding: 1rem;
+        }
+        .top-two-stats {
+          flex-direction: column;
+        }
+        .top-two-stats > .stat > strong {
+          font-size: 3rem;
+        }
+        main > header {
+          display: none;
+        }
+        .avg-joule,
+        .avg-lap-time {
+          display: none;
+        }
+        .settings-section {
+          flex-direction: column;
+        }
+
+        .settings-container:focus-within > .settings-section {
+          display: flex;
+        }
+
+        .settings-toggle {
+          display: block;
+        }
+
+        .settings-container {
+          display: block;
+          position: fixed;
+          top: 0.2rem;
+          right: 0.2rem;
+        }
+
+        .controls-section {
+          flex-direction: column;
+        }
+        #lap-btn {
+          min-height: 15rem;
+        }
+      }
     </style>
   </head>
 
@@ -240,39 +296,71 @@
       </header>
 
       <section>
-        <div class="stat current-lap">
-          <strong id="current-lap">000.000s</strong>
-        </div>
-        <div class="stat">
-          <span>Average Joule</span>
-          <strong id="avg-joule">00000J</strong>
+        <div class="top-two-stats">
+          <div class="stat">
+            <span>Total Time</span>
+            <strong id="total-time">000.000s</strong>
+          </div>
+          <div class="stat">
+            <span>Current lap</span>
+            <strong id="current-lap">000.000s</strong>
+          </div>
         </div>
         <div class="stat">
           <span>Total Diff</span>
           <strong id="total-diff">000.000s</strong>
         </div>
-        <div class="stat">
+        <div class="stat avg-lap-time">
           <span>Average Lap</span>
           <strong id="avg-time">000.000s</strong>
         </div>
-        <div class="stat">
-          <span>Optimal Lap</span>
-          <div class="input-group">
-            <input
-              id="optimal-lap"
-              type="number"
-              min="0"
-              step="0.001"
-              value="107"
-            />
-            <span>sec</span>
-          </div>
+        <div class="stat avg-joule">
+          <span>Average Joule</span>
+          <strong id="avg-joule">00000J</strong>
         </div>
       </section>
 
-      <section>
-        <button id="start-btn">Start</button>
-        <button id="lap-btn" disabled>Lap</button>
+      <div class="settings-container">
+        <button class="settings-toggle">⚙️</button>
+        <section class="settings-section">
+          <div class="stat">
+            <span>Optimal Lap</span>
+            <div class="input-group">
+              <input
+                id="optimal-lap"
+                type="number"
+                min="0"
+                step="0.01"
+                value="188.57"
+              />
+              <span>sec</span>
+            </div>
+          </div>
+          <div class="stat">
+            <span>Max Time</span>
+            <div class="input-group">
+              <input
+                id="max-time"
+                type="number"
+                min="0"
+                step="1"
+                value="1320"
+              />
+              <span>sec</span>
+            </div>
+          </div>
+          <div class="stat">
+            <span>Min Laps</span>
+            <div class="input-group">
+              <input id="min-laps" type="number" min="0" step="1" value="7" />
+              <span>laps</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="controls-section">
+        <button id="lap-btn" class="start-btn">Start</button>
         <button id="stop-btn">Stop</button>
       </section>
 
@@ -299,9 +387,11 @@
     <script>
       const currentLapTime = document.getElementById("current-lap");
       const totalDiff = document.getElementById("total-diff");
+      const totalTime = document.getElementById("total-time");
       const avgJoule = document.getElementById("avg-joule");
       const avgTime = document.getElementById("avg-time");
       const optimalLap = document.getElementById("optimal-lap");
+      const maxTime = document.getElementById("max-time");
 
       const lapList = document.getElementById("lap-list");
       const noLaps = document.getElementById("no-laps");
@@ -318,13 +408,11 @@
 
       function start() {
         optimalLapMs = parseFloat(optimalLap.value) * 1000;
-        optimalLap.disabled = true;
-        startBtn.disabled = true;
-        lapBtn.disabled = false;
         laps.push({ startTime: Date.now(), endTime: null, energy: null });
         intervalId = setInterval(updateStats, 45);
+        lapBtn.textContent = "Lap";
+        lapBtn.classList.remove("start-btn");
       }
-      startBtn.onclick = start;
 
       function lap() {
         if (Date.now() - laps[laps.length - 1].startTime < 5000) return;
@@ -333,15 +421,19 @@
         updateLaps();
         noLaps.style.display = "none";
       }
-      lapBtn.onclick = lap;
+      lapBtn.onclick = () => {
+        if (laps.length == 0) {
+          start();
+        } else {
+          lap();
+        }
+      };
       document.addEventListener("keydown", (e) => {
         if (e.code === "Space") {
           e.preventDefault();
           if (!lapBtn.disabled) {
             lap();
             lapList.firstChild.querySelector("input").focus();
-          } else if (!startBtn.disabled) {
-            start();
           }
         } else if (e.code === "Enter") {
           document.activeElement.blur();
@@ -363,7 +455,7 @@
       stopBtn.onclick = stop;
 
       function updateStats() {
-        // totalTime.textContent = formatTime(Date.now() - laps[0].startTime);
+        totalTime.textContent = formatTime(Date.now() - laps[0].startTime);
         currentLapTime.textContent = formatTime(
           Date.now() - laps[laps.length - 1].startTime,
         );
