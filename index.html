@@ -234,6 +234,9 @@
       }
 
       @media (max-width: 700px) {
+        body {
+          min-height: 120vh;
+        }
         body > main {
           padding: 1rem;
         }
@@ -257,7 +260,15 @@
 
         .controls-section {
           flex-direction: column;
+          position: fixed;
+          bottom: 1rem;
+          margin-left: -1rem;
+          margin-bottom: -1rem;
+          width: 100%;
+          border-radius: 0;
+          box-shadow: 0 -1rem 3rem var(--bg-2);
         }
+
         #lap-btn {
           min-height: 15rem;
         }
