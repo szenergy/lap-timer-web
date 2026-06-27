@@ -233,12 +233,6 @@
         gap: 1rem;
       }
 
-      .settings-container,
-      .settings-section,
-      .settings-toggle {
-        display: none;
-      }
-
       @media (max-width: 700px) {
         body > main {
           padding: 1rem;
@@ -256,23 +250,9 @@
         .avg-lap-time {
           display: none;
         }
+
         .settings-section {
           flex-direction: column;
-        }
-
-        .settings-container:focus-within > .settings-section {
-          display: flex;
-        }
-
-        .settings-toggle {
-          display: block;
-        }
-
-        .settings-container {
-          display: block;
-          position: fixed;
-          top: 0.2rem;
-          right: 0.2rem;
         }
 
         .controls-section {
@@ -280,6 +260,12 @@
         }
         #lap-btn {
           min-height: 15rem;
+        }
+        .lap-joule-input {
+          display: none;
+        }
+        .laps .lap-item {
+          grid-template-columns: 4rem 1fr 1fr;
         }
       }
     </style>
@@ -299,7 +285,7 @@
         <div class="top-two-stats">
           <div class="stat">
             <span>Total Time</span>
-            <strong id="total-time">000.000s</strong>
+            <strong id="total-time">00:00.000</strong>
           </div>
           <div class="stat">
             <span>Current lap</span>
@@ -320,44 +306,35 @@
         </div>
       </section>
 
-      <div class="settings-container">
-        <button class="settings-toggle">⚙️</button>
-        <section class="settings-section">
-          <div class="stat">
-            <span>Optimal Lap</span>
-            <div class="input-group">
-              <input
-                id="optimal-lap"
-                type="number"
-                min="0"
-                step="0.01"
-                value="188.57"
-              />
-              <span>sec</span>
-            </div>
+      <section class="settings-section">
+        <div class="stat">
+          <span>Optimal Lap</span>
+          <div class="input-group">
+            <input
+              id="optimal-lap"
+              type="number"
+              min="0"
+              step="0.01"
+              value="188.57"
+            />
+            <span>sec</span>
           </div>
-          <div class="stat">
-            <span>Max Time</span>
-            <div class="input-group">
-              <input
-                id="max-time"
-                type="number"
-                min="0"
-                step="1"
-                value="1320"
-              />
-              <span>sec</span>
-            </div>
+        </div>
+        <!--<div class="stat">
+          <span>Max Time</span>
+          <div class="input-group">
+            <input id="max-time" type="number" min="0" step="1" value="1320" />
+            <span>sec</span>
           </div>
-          <div class="stat">
-            <span>Min Laps</span>
-            <div class="input-group">
-              <input id="min-laps" type="number" min="0" step="1" value="7" />
-              <span>laps</span>
-            </div>
+        </div>
+        <div class="stat">
+          <span>Min Laps</span>
+          <div class="input-group">
+            <input id="min-laps" type="number" min="0" step="1" value="7" />
+            <span>laps</span>
           </div>
-        </section>
-      </div>
+        </div>-->
+      </section>
 
       <section class="controls-section">
         <button id="lap-btn" class="start-btn">Start</button>
@@ -375,7 +352,7 @@
             <span class="lap-number">#1</span>
             <span class="lap-time">000.000s</span>
             <span class="lap-diff">+000.000</span>
-            <div class="input-group">
+            <div class="input-group lap-joule-input">
               <input type="number" min="0" step="1" />
               <span>Joules</span>
             </div>
@@ -392,6 +369,7 @@
       const avgTime = document.getElementById("avg-time");
       const optimalLap = document.getElementById("optimal-lap");
       const maxTime = document.getElementById("max-time");
+      const settingsSection = document.querySelector(".settings-section");
 
       const lapList = document.getElementById("lap-list");
       const noLaps = document.getElementById("no-laps");
@@ -412,6 +390,7 @@
         intervalId = setInterval(updateStats, 45);
         lapBtn.textContent = "Lap";
         lapBtn.classList.remove("start-btn");
+        settingsSection.style.display = "none";
       }
 
       function lap() {
@@ -455,7 +434,7 @@
       stopBtn.onclick = stop;
 
       function updateStats() {
-        totalTime.textContent = formatTime(Date.now() - laps[0].startTime);
+        totalTime.textContent = formatMinutes(Date.now() - laps[0].startTime);
         currentLapTime.textContent = formatTime(
           Date.now() - laps[laps.length - 1].startTime,
         );
@@ -513,10 +492,18 @@
 
       const formatTime = (ms) => {
         const totalMs = Math.max(0, Math.abs(Math.floor(ms)));
-        // const minutes = Math.floor(totalMs / 60000);
+        const minutes = Math.floor(totalMs / 60000);
         const seconds = Math.floor(totalMs / 1000);
         const millis = totalMs % 1000;
         return `${String(seconds).padStart(3, "0")}.${String(millis).padStart(3, "0")}s`;
+      };
+
+      const formatMinutes = (ms) => {
+        const totalMs = Math.max(0, Math.abs(Math.floor(ms)));
+        const minutes = Math.floor(totalMs / 60000);
+        const seconds = Math.floor((totalMs % 60000) / 1000);
+        const millis = totalMs % 1000;
+        return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
       };
 
       function downloadCSV() {
